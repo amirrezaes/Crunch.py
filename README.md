@@ -1,5 +1,5 @@
 # Pyrunch
-Python Equivalent For Crunch Password List Maker
+Python script for crunch
 
 It is not as fast as the orginal crunch which is written in C.
 I will add multiprocessing in future.
