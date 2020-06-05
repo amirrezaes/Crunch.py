@@ -23,7 +23,7 @@ def Output(Password, WriteToFile, Filename):
         for item in Password:
             print(*item, sep='')
     elif WriteToFile:
-        with open(Filename, 'w') as out:
+        with open(Filename, 'a') as out:
             for item in Password:
                 out.write(''.join(item)+'\n')
 
