@@ -1,7 +1,7 @@
 # Pyrunch
 Python script for crunch
 
-It is not as fast as the orginal crunch which is written in C.
+It is not as fast as the orginal crunch which is written in C but it is definitely faster than https://github.com/derv82/werdy/blob/master/crunch.py .
 I will add multiprocessing in future.
 
     Usage: pylist.py <min> <max> <characters> <options>
