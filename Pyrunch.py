@@ -1,16 +1,19 @@
-import sys, os, time
+import sys
+import os
+import time
 
 intro = '''
 Usage: pyrunch.py <min> <max> <characters> <options>
+
 Options:
    -o         Set a name or directory for output file [defult: Script Path]
    -m         Memory Friendly mode(slightly slower) [default: off]
    -h         Show help command
 
 '''
-# these are here to prevent errors
+
 start = time.time()
-n = 0
+n = 0  # we are using n to get number of generated combinations
 
 
 def Generator(*mystring, Length):  # func for generating combinations
@@ -22,28 +25,29 @@ def Generator(*mystring, Length):  # func for generating combinations
 
 
 def Output(Password):  # func for wrapping outps
+    global n
     if not WriteToFile:  # just printing
         for item in Password:
             print(*item, sep='')
     elif WriteToFile:  # writing to file
-        global n
-        n = 0  # we are using n to get number of generated combinations
         with open(Filename, 'a') as out:
             if MemoryFriendly:  # this will not store anything in memory
                 for item in Password:
                     out.write(''.join(item)+'\n')
                     n+=1
-                    if (n*100)/all_pos % 1 == 0:
-                        print('Working: ', (n*100)/all_pos, '%', end='\r')
+                    if n % round(all_pos/100) == 0:
+                        print('Working: ', round((n*100)/all_pos), '%', end='\r')
                 return
             chunk = []  # we will store 1% of combs every time before writing
             for item in Password:
-                n += 1
                 chunk.append(''.join(item)+'\n')
-                if (n*100)/all_pos % 1 == 0:
+                n += 1
+                if n % round(all_pos/100) == 0:
                     out.writelines(chunk)
                     chunk.clear()
-                    print('Working: ', (n*100)/all_pos, '%', end='\r')
+                    print('Working: ', round((n*100)/all_pos), '%', end='\r')
+            if len(chunk) > 0:
+                out.writelines(chunk)
 
 
 try:
@@ -68,10 +72,8 @@ try:
                     Filename = workingpath+'\\'+args[arg+1]
                 else:
                     Filename = args[arg+1]
-                arg += 1
             elif args[arg] == '-m' or args[arg] == '--memory':
                 MemoryFriendly = True
-                arg += 1
             arg += 1
 
     start = time.time()
@@ -88,7 +90,6 @@ try:
             all_pos = all_pos + len(mystring) ** pos
         for length in range(minlength, maxlength+1):
             Output(Generator(mystring, Length=length))
-            all_pos -= n
 except (NameError, IndexError, ValueError):
     print("Incorrect Arguments use -h or --help for help.")
 except KeyboardInterrupt:
