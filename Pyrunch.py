@@ -6,8 +6,13 @@ intro = '''
 Usage: pyrunch.py <min> <max> <characters> <options>
 
 Options:
-   -o         Set a name or directory for output file [defult: Script Path]
+   -o         Set a name or directory for output file
    -m         Memory Friendly mode(slightly slower) [default: off]
+   -s suffix  Add a Suffix to Passwords
+   -p prefix  Add a Prefix to Passwords
+   --hash     Hash Passwords With Given algo:
+                md5(), sha1(), sha224(), sha256(), sha384(), sha512(), blake2b(), blake2s(),
+                sha3_224, sha3_256, sha3_384, sha3_512, shake_128, and shake_256.
    -h         Show help command
 
 '''
@@ -16,36 +21,42 @@ start = time.time()
 n = 0  # we are using n to get number of generated combinations
 
 
-def Generator(*mystring, Length):  # func for generating combinations
+def Generator(*mystring, Length, algo = None):  # func for generating combinations
     result = [[]]
     recurser = [tuple(iter) for iter in mystring] * Length
     for iter in recurser:
         result = (i+[j] for i in result for j in iter)
-    yield from result
+    if algo == None:
+        yield from result
+    else:
+        hashed = (ha.new(algo, data=''.join(i).encode()).hexdigest() for i in result)
+        yield from hashed
 
-
-def Output(Password):  # func for wrapping outps
+def Output(Password, Pre, Suf):  # func for wrapping outps
     global n
     if not WriteToFile:  # just printing
         for item in Password:
-            print(*item, sep='')
+            print(Pre, *item, Suf, sep='')
     elif WriteToFile:  # writing to file
         with open(Filename, 'a') as out:
             if MemoryFriendly:  # this will not store anything in memory
                 for item in Password:
-                    out.write(''.join(item)+'\n')
+                    out.write(Pre+''.join(item)+Suf+'\n')
                     n+=1
                     if n % round(all_pos/100) == 0:
                         print('Working: ', round((n*100)/all_pos), '%', end='\r')
                 return
             chunk = []  # we will store 1% of combs every time before writing
             for item in Password:
-                chunk.append(''.join(item)+'\n')
+                chunk.append(Pre+''.join(item)+Suf+'\n')
                 n += 1
-                if n % round(all_pos/100) == 0:
-                    out.writelines(chunk)
-                    chunk.clear()
-                    print('Working: ', round((n*100)/all_pos), '%', end='\r')
+                try:
+                    if n % round(all_pos/100) == 0:
+                        out.writelines(chunk)
+                        chunk.clear()
+                        print('Working: ', round((n*100)/all_pos), '%', end='\r')
+                except ZeroDivisionError:  # if all_pos is less than 50 the round() will turn it to 0 and we will get this error
+                    pass
             if len(chunk) > 0:
                 out.writelines(chunk)
 
@@ -58,10 +69,13 @@ try:
     mystring = str(sys.argv[3])
     minlength = int(sys.argv[1])
     maxlength = int(sys.argv[2])
-    workingpath = os.path.dirname(sys.argv[0])
+    workingpath = os.getcwd()
     WriteToFile = False
     Filename = None
     MemoryFriendly = False
+    algo = None
+    Pre = ''
+    Suf = ''
     args = sys.argv[4:]
     if args != []:
         arg = 0
@@ -74,13 +88,20 @@ try:
                     Filename = args[arg+1]
             elif args[arg] == '-m' or args[arg] == '--memory':
                 MemoryFriendly = True
+            elif args[arg] == '-p' or args[arg] == '--prefix':
+                Pre = args[arg+1]
+            elif args[arg] == '-s' or args[arg] == '--sufix':
+                Suf = args[arg+1]
+            elif args[arg] == '--hash':
+                import hashlib as ha
+                algo = args[arg+1]
             arg += 1
 
     start = time.time()
 
     if maxlength == minlength:  # generating combinations with same length
         all_pos = len(mystring) ** minlength  # calculatinf all possible combs
-        Output(Generator(mystring, Length=minlength))
+        Output(Generator(mystring, Length=minlength, algo=algo), Pre, Suf)
     else:  # generating combinations with diffrent lengths
         if minlength > maxlength:
             print('Min Length Is Bigger Than Max!! Try Again.')
@@ -89,8 +110,9 @@ try:
         for pos in range(minlength, maxlength+1):
             all_pos = all_pos + len(mystring) ** pos
         for length in range(minlength, maxlength+1):
-            Output(Generator(mystring, Length=length))
-except (NameError, IndexError, ValueError):
+            Output(Generator(mystring, Length=length, algo=algo), Pre, Suf)
+except (NameError, IndexError, ValueError) as er:
+    print(er)
     print("Incorrect Arguments use -h or --help for help.")
 except KeyboardInterrupt:
     print("Stoped")
