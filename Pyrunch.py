@@ -6,19 +6,34 @@ intro = '''
 Usage: pyrunch.py <min> <max> <characters> <options>
 
 Options:
-   -o         Set a name or directory for output file
+   -o         Set a Name or Directory for Output File (use -o - for piping the output to aircrack-ng, etc...)
    -m         Memory Friendly mode(slightly slower) [default: off]
    -s suffix  Add a Suffix to Passwords
    -p prefix  Add a Prefix to Passwords
-   --hash     Hash Passwords With Given algo:
-                md5(), sha1(), sha224(), sha256(), sha384(), sha512(), blake2b(), blake2s(),
-                sha3_224, sha3_256, sha3_384, sha3_512, shake_128, and shake_256.
-   -h         Show help command
+   --hash     Hash Passwords With Given Algorithm:
+                md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s,
+                sha3_224, sha3_256, sha3_384, sha3_512.
+   -h         Print This Help Message
 
 '''
+if sys.argv[1] == '--help' or sys.argv[1] == '-h':
+    print(intro)
+    sys.exit(0)
 
 start = time.time()
 n = 0  # we are using n to get number of generated combinations
+
+# getting arguments
+mystring = str(sys.argv[3])
+minlength = int(sys.argv[1])
+maxlength = int(sys.argv[2])
+workingpath = os.getcwd()
+WriteToFile = False
+Filename = None
+MemoryFriendly = False
+algo = None
+Pre = ''
+Suf = ''
 
 
 def Generator(*mystring, Length, algo = None):  # func for generating combinations
@@ -32,7 +47,8 @@ def Generator(*mystring, Length, algo = None):  # func for generating combinatio
         hashed = (ha.new(algo, data=''.join(i).encode()).hexdigest() for i in result)
         yield from hashed
 
-def Output(Password, Pre, Suf):  # func for wrapping outps
+
+def Output(Password, Pre, Suf):  # func for wrapping outputs
     global n
     if not WriteToFile:  # just printing
         for item in Password:
@@ -61,31 +77,20 @@ def Output(Password, Pre, Suf):  # func for wrapping outps
                 out.writelines(chunk)
 
 
-try:
-    if sys.argv[1] == '--help' or sys.argv[1] == '-h':
-        print(intro)
-        sys.exit(0)
-    # getting arguments
-    mystring = str(sys.argv[3])
-    minlength = int(sys.argv[1])
-    maxlength = int(sys.argv[2])
-    workingpath = os.getcwd()
-    WriteToFile = False
-    Filename = None
-    MemoryFriendly = False
-    algo = None
-    Pre = ''
-    Suf = ''
-    args = sys.argv[4:]
+def parse(args):
+    global WriteToFile, Filename, MemoryFriendly, algo, Pre, Suf, ha
     if args != []:
         arg = 0
         while arg < len(args):
             if args[arg] == '-o' or args[arg] == '--output':
-                WriteToFile = True
-                if os.path.dirname(args[arg+1]) == '':
-                    Filename = workingpath+'\\'+args[arg+1]
+                if args[arg+1] == '-':
+                    pass
                 else:
-                    Filename = args[arg+1]
+                    WriteToFile = True
+                    if os.path.dirname(args[arg+1]) == '':
+                        Filename = workingpath+'\\'+args[arg+1]
+                    else:
+                        Filename = args[arg+1]
             elif args[arg] == '-m' or args[arg] == '--memory':
                 MemoryFriendly = True
             elif args[arg] == '-p' or args[arg] == '--prefix':
@@ -96,9 +101,10 @@ try:
                 import hashlib as ha
                 algo = args[arg+1]
             arg += 1
+def main():
+    global start, all_pos
 
     start = time.time()
-
     if maxlength == minlength:  # generating combinations with same length
         all_pos = len(mystring) ** minlength  # calculatinf all possible combs
         Output(Generator(mystring, Length=minlength, algo=algo), Pre, Suf)
@@ -111,13 +117,19 @@ try:
             all_pos = all_pos + len(mystring) ** pos
         for length in range(minlength, maxlength+1):
             Output(Generator(mystring, Length=length, algo=algo), Pre, Suf)
-except (NameError, IndexError, ValueError) as er:
-    print(er)
-    print("Incorrect Arguments use -h or --help for help.")
-except KeyboardInterrupt:
-    print("Stoped")
-except MemoryError:
-    print("Memory is Full, Use Memory Friendly Mode")
-finally:
-    end = time.time()
-    print('\n', 'Ended in: ', round(end-start, 10), 'sec')
+
+
+if __name__ == '__main__':
+    try:
+        parse(sys.argv[4:])
+        main()
+    except (NameError, IndexError, ValueError) as er:
+        print(er)
+        print("Incorrect Arguments use -h or --help for help.")
+    except KeyboardInterrupt:
+        print("Stoped")
+    except MemoryError:
+        print("Memory is Full, Use Memory Friendly Mode")
+    finally:
+        end = time.time()
+        print('\n', 'Ended in: ', round(end-start, 10), 'sec')
