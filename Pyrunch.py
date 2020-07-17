@@ -16,17 +16,10 @@ Options:
    -h         Print This Help Message
 
 '''
-if sys.argv[1] == '--help' or sys.argv[1] == '-h':
-    print(intro)
-    sys.exit(0)
 
 start = time.time()
 n = 0  # we are using n to get number of generated combinations
 
-# getting arguments
-mystring = str(sys.argv[3])
-minlength = int(sys.argv[1])
-maxlength = int(sys.argv[2])
 workingpath = os.getcwd()
 WriteToFile = False
 Filename = None
@@ -36,12 +29,12 @@ Pre = ''
 Suf = ''
 
 
-def Generator(*mystring, Length, algo = None):  # func for generating combinations
+def Generator(*mystring, Length, algo=None):  # func for generating combinations
     result = [[]]
     recurser = [tuple(iter) for iter in mystring] * Length
     for iter in recurser:
         result = (i+[j] for i in result for j in iter)
-    if algo == None:
+    if algo is None:
         yield from result
     else:
         hashed = (ha.new(algo, data=''.join(i).encode()).hexdigest() for i in result)
@@ -79,6 +72,13 @@ def Output(Password, Pre, Suf):  # func for wrapping outputs
 
 def parse(args):
     global WriteToFile, Filename, MemoryFriendly, algo, Pre, Suf, ha
+    global mystring, minlength, maxlength
+    if '-h' in args or '--help' in args or '-h' in sys.argv[1:2]:
+        print(intro)
+        sys.exit(0)
+    mystring = str(sys.argv[3])
+    minlength = int(sys.argv[1])
+    maxlength = int(sys.argv[2])
     if args != []:
         arg = 0
         while arg < len(args):
@@ -91,16 +91,22 @@ def parse(args):
                         Filename = workingpath+'\\'+args[arg+1]
                     else:
                         Filename = args[arg+1]
+                arg += 1
             elif args[arg] == '-m' or args[arg] == '--memory':
                 MemoryFriendly = True
             elif args[arg] == '-p' or args[arg] == '--prefix':
                 Pre = args[arg+1]
+                arg += 1
             elif args[arg] == '-s' or args[arg] == '--sufix':
                 Suf = args[arg+1]
+                arg += 1
             elif args[arg] == '--hash':
                 import hashlib as ha
                 algo = args[arg+1]
+                arg += 1
             arg += 1
+
+
 def main():
     global start, all_pos
 
@@ -123,8 +129,7 @@ if __name__ == '__main__':
     try:
         parse(sys.argv[4:])
         main()
-    except (NameError, IndexError, ValueError) as er:
-        print(er)
+    except (NameError, IndexError, ValueError):
         print("Incorrect Arguments use -h or --help for help.")
     except KeyboardInterrupt:
         print("Stoped")
