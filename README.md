@@ -16,5 +16,6 @@ I will add multiprocessing in future.
                     sha3_224, sha3_256, sha3_384, sha3_512.
         -h         Print This Help Message
 
+Mask added though it's not working as expected :( , still deploying...
 
 ![](gif.gif)
