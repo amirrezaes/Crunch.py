@@ -4,7 +4,8 @@ import time
 
 intro = '''
 Usage: pyrunch.py <min> <max> <characters> <options>
-
+       or
+       pyrunch.py --mask <mask> <options>
 Options:
    -o         Set a Name or Directory for Output File (use -o - for piping the output to aircrack-ng, etc...)
    -m         Memory Friendly mode(slightly slower) [default: off]
@@ -13,6 +14,11 @@ Options:
    --hash     Hash Passwords With Given Algorithm:
                 md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s,
                 sha3_224, sha3_256, sha3_384, sha3_512.
+   --mask     Insted of Max and Min Length You Can Use Mask:
+                @: Alphabet_lower
+                ,: Alphabet_upper
+                $: Special_chars
+                %: Digits
    -h         Print This Help Message
 
 '''
@@ -77,7 +83,7 @@ def Output(Password, Pre, Suf):  # func for wrapping outputs
 
 def Gen_mask(mask):
     signs = {'@': alpha_l, ',': alpha_u, '$': symbol, '%': numbers}
-    mask_index = {'@': [], '%': []}
+    mask_index = {'@': [], ',': [], '$': [], '%': []}
     item = 0
     cut = 1
     while item < len(mask):
@@ -94,6 +100,20 @@ def Gen_mask(mask):
                 cut = 0
             elif cut:
                 mask_index['%'].append('%')
+                cut = 0
+        elif mask[item] == ',':
+            if not cut:
+                mask_index[','][-1]+=','
+                cut = 0
+            elif cut:
+                mask_index[','].append(',')
+                cut = 0
+        elif mask[item] == '$':
+            if not cut:
+                mask_index['$'][-1]+='$'
+                cut = 0
+            elif cut:
+                mask_index['$'].append('$')
                 cut = 0
         else:
             cut = 1
