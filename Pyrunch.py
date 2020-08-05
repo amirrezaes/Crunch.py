@@ -125,11 +125,11 @@ def Gen_mask(mask):
         charset = signs[i[0]]
         copy_result = result.copy()
         result.clear()
-        for mask in copy_result:
-            for c in Generator(charset, Length=len(i)):
-                mask = mask.replace(recurser, ''.join(c), 1)
-                result.append(mask)
-                recurser = ''.join(c)
+        for j in copy_result:
+            for password in Generator(charset, Length=len(i)):
+                j = j.replace(recurser, ''.join(password), 1)
+                result.append(j)
+                recurser = ''.join(password)
     yield from result
 
 
@@ -141,6 +141,7 @@ def parse(args):
         sys.exit(0)
     if '--mask' in sys.argv:
         mask = sys.argv[sys.argv.index('--mask') + 1]
+        args = sys.argv[2:]
     else:
         mystring = str(sys.argv[3])
         minlength = int(sys.argv[1])
@@ -153,10 +154,7 @@ def parse(args):
                     pass
                 else:
                     WriteToFile = True
-                    if os.path.dirname(args[arg+1]) == '':
-                        Filename = workingpath+'\\'+args[arg+1]
-                    else:
-                        Filename = args[arg+1]
+                    Filename = args[arg+1]
                 arg += 1
             elif args[arg] == '-m' or args[arg] == '--memory':
                 MemoryFriendly = True
@@ -178,6 +176,7 @@ def main():
 
     start = time.time()
     if mask is not None:
+        all_pos = sum([mask.count(i) for i in '@$,%'])
         Output(Gen_mask(mask), Pre, Suf)
     elif maxlength == minlength:  # generating combinations with same length
         all_pos = len(mystring) ** minlength  # calculatinf all possible combs
@@ -197,7 +196,8 @@ if __name__ == '__main__':
     try:
         parse(sys.argv[4:])
         main()
-    except (NameError, IndexError, ValueError):
+    except (NameError, IndexError, ValueError) as e:
+        print(e)
         print("Incorrect Arguments use -h or --help for help.")
     except KeyboardInterrupt:
         print("Stoped")
