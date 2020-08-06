@@ -22,6 +22,6 @@ I will add multiprocessing in future.
                     %: Digits
        -h         Print This Help Message
                
-Mask added though it's not working as expected :( , still deploying...
+Mask added !
 
 ![](gif.gif)
