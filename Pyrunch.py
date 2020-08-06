@@ -52,6 +52,24 @@ def Generator(*mystring, Length, algo=None):  # func for generating combinations
     yield from result
 
 
+def Gen_mask(mask):
+    result = [mask]
+    for word in result:
+        if word.find('@') != -1:
+            password = word.replace('@', '{}', 1)
+            result.extend([password.format(*i) for i in alpha_l])
+        elif word.find('%') != -1:
+            password = word.replace('%', '{}', 1)
+            result.extend([password.format(*i) for i in numbers])
+        elif word.find(',') != -1:
+            password = word.replace(',', '{}', 1)
+            result.extend([password.format(*i) for i in alpha_u])
+        elif word.find('$') != -1:
+            password = word.replace('$', '{}', 1)
+            result.extend([password.format(*i) for i in symbol])
+    return result[-all_pos:]
+
+
 def Output(Password, Pre, Suf):  # func for wrapping outputs
     global n
     if not WriteToFile:  # just printing
@@ -79,58 +97,6 @@ def Output(Password, Pre, Suf):  # func for wrapping outputs
                     pass
             if len(chunk) > 0:
                 out.writelines(chunk)
-
-
-def Gen_mask(mask):
-    signs = {'@': alpha_l, ',': alpha_u, '$': symbol, '%': numbers}
-    mask_index = {'@': [], ',': [], '$': [], '%': []}
-    item = 0
-    cut = 1
-    while item < len(mask):
-        if mask[item] == '@':
-            if not cut:
-                mask_index['@'][-1]+='@'
-                c = 0
-            elif cut:
-                mask_index['@'].append('@')
-                cut = 0
-        elif mask[item] == '%':
-            if not cut:
-                mask_index['%'][-1]+='%'
-                cut = 0
-            elif cut:
-                mask_index['%'].append('%')
-                cut = 0
-        elif mask[item] == ',':
-            if not cut:
-                mask_index[','][-1]+=','
-                cut = 0
-            elif cut:
-                mask_index[','].append(',')
-                cut = 0
-        elif mask[item] == '$':
-            if not cut:
-                mask_index['$'][-1]+='$'
-                cut = 0
-            elif cut:
-                mask_index['$'].append('$')
-                cut = 0
-        else:
-            cut = 1
-        item+=1
-    item = [mask_index[i][j] for i in mask_index for j in range(0, len(mask_index[i]))]
-    result = [mask]
-    for i in item:
-        recurser = i
-        charset = signs[i[0]]
-        copy_result = result.copy()
-        result.clear()
-        for j in copy_result:
-            for password in Generator(charset, Length=len(i)):
-                j = j.replace(recurser, ''.join(password), 1)
-                result.append(j)
-                recurser = ''.join(password)
-    yield from result
 
 
 def parse(args):
@@ -176,7 +142,11 @@ def main():
 
     start = time.time()
     if mask is not None:
-        all_pos = sum([mask.count(i) for i in '@$,%'])
+        len_key = {'@': 26, ',': 26, '%': 10, '$': 36}
+        all_pos = 1
+        for char in mask:
+            if char in len_key:
+                all_pos *= len_key[char]
         Output(Gen_mask(mask), Pre, Suf)
     elif maxlength == minlength:  # generating combinations with same length
         all_pos = len(mystring) ** minlength  # calculatinf all possible combs
