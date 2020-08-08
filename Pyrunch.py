@@ -55,18 +55,14 @@ def Generator(*mystring, Length, algo=None):  # func for generating combinations
 def Gen_mask(mask):
     result = [mask]
     for word in result:
-        if word.find('@') != -1:
-            password = word.replace('@', '{}', 1)
-            result.extend([password.format(*i) for i in alpha_l])
-        elif word.find('%') != -1:
-            password = word.replace('%', '{}', 1)
-            result.extend([password.format(*i) for i in numbers])
-        elif word.find(',') != -1:
-            password = word.replace(',', '{}', 1)
-            result.extend([password.format(*i) for i in alpha_u])
-        elif word.find('$') != -1:
-            password = word.replace('$', '{}', 1)
-            result.extend([password.format(*i) for i in symbol])
+        if '@' in word:
+            result.extend([word.replace('@', i, 1) for i in alpha_l])
+        elif '%' in word:
+            result.extend([word.replace('%', i, 1) for i in numbers])
+        elif ',' in word:
+            result.extend([word.replace(',', i, 1) for i in alpha_u])
+        elif '$' in word:
+            result.extend([word.replace('$', i, 1) for i in symbol])
     return result[-all_pos:]
 
 
