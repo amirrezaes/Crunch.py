@@ -1,8 +1,10 @@
 # Pyrunch
-Python script for crunch
+Python script for crunch with Gui
 
 It is not as fast as the orginal crunch which is written in C but it is definitely faster than https://github.com/derv82/werdy/blob/master/crunch.py .
-I will add multiprocessing in future.
+
+![Alt text](img.png?raw=true "Title")
+
 
     Usage: pyrunch.py <min> <max> <characters> <options>
            or
@@ -25,4 +27,3 @@ I will add multiprocessing in future.
                
 ![](gif.gif)
 
-![Alt text](img.png?raw=true "Title")
