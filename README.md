@@ -25,4 +25,4 @@ I will add multiprocessing in future.
                
 ![](gif.gif)
 
-![Alt text](img.jpg?raw=true "Title")
+![Alt text](img.png?raw=true "Title")
