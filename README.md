@@ -20,8 +20,9 @@ I will add multiprocessing in future.
                     ,: Alphabet_upper
                     $: Special_chars
                     %: Digits
+       --gui      Lunch Gui Mode
        -h         Print This Help Message
                
-Mask added !
-
 ![](gif.gif)
+
+![Alt text](img.jpg?raw=true "Title")
