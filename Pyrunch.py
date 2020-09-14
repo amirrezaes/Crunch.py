@@ -162,8 +162,7 @@ if __name__ == '__main__':
     try:
         parse(sys.argv[4:])
         main()
-    except (NameError, IndexError, ValueError) as e:
-        print(e)
+    except (NameError, IndexError, ValueError):
         print("Incorrect Arguments use -h or --help for help.")
     except KeyboardInterrupt:
         print("Stoped")
