@@ -1,7 +1,7 @@
 # Pyrunch
 Python script for crunch
 
-It is not as fast as the orginal crunch which is written in C but it is definitely faster than https://github.com/derv82/werdy/blob/master/crunch.py .
+It is not as fast as the orginal crunch which is written in C but it is definitely fast among other worldlist generators.
 I will add multiprocessing in future.
 
     Usage: pyrunch.py <min> <max> <characters> <options>
@@ -21,7 +21,5 @@ I will add multiprocessing in future.
                     ?s: Special_chars
                     ?d: Digits
        -h         Print This Help Message
-               
-Mask added !
 
 ![](gif.gif)
