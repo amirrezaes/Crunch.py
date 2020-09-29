@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+from itertools import product as p
 
 intro = '''
 Usage: pyrunch.py <min> <max> <characters> <options>
@@ -15,10 +16,10 @@ Options:
                 md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s,
                 sha3_224, sha3_256, sha3_384, sha3_512.
    --mask     Insted of Max and Min Length You Can Use Mask:
-                @: Alphabet_lower
-                ,: Alphabet_upper
-                $: Special_chars
-                %: Digits
+                ?l: Alphabet_lower
+                ?u: Alphabet_upper
+                ?s: Special_chars
+                ?d: Digits
    -h         Print This Help Message
 
 '''
@@ -26,8 +27,8 @@ Options:
 alpha_u = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 alpha_l = 'abcdefghijklmnopqrstuvwxyz'
 numbers = '0123456789'
-symbol = """!@#$%^&*()_+-=,.`~[]\{}|;':"/<>?'"""
-
+symbol = """!@#$%^&*()_+-=,.`~[]\{}|;':"/<>?"""
+table = {'?l': alpha_l, '?u': alpha_u, '?s': symbol, '?d': numbers}
 start = time.time()
 
 n = 0  # we are using n to track the number of generated combinations
@@ -41,7 +42,7 @@ Suf = ''
 mask = None
 
 
-def Generator(*mystring, Length, algo=None):  # func for generating combinations
+def Generator(*mystring, Length=1, algo=None):  # func for generating combinations
     result = [[]]
     recurser = [tuple(iter) for iter in mystring] * Length
     for iter in recurser:
@@ -52,21 +53,24 @@ def Generator(*mystring, Length, algo=None):  # func for generating combinations
     yield from result
 
 
-def Gen_mask(mask):
-    result = [mask]
-    for word in result:
-        if '@' in word:
-            result.extend([word.replace('@', i, 1) for i in alpha_l])
-        elif '%' in word:
-            result.extend([word.replace('%', i, 1) for i in numbers])
-        elif ',' in word:
-            result.extend([word.replace(',', i, 1) for i in alpha_u])
-        elif '$' in word:
-            result.extend([word.replace('$', i, 1) for i in symbol])
-    return result[-all_pos:]
+def Gen_mask(mask):  # func for generating mask passwords
+    i = 0
+    while i+1 < len(mask):
+        key = mask[i] + mask[i+1]
+        if key in table:
+            mask = list(mask.partition(key))
+            mask[1] = table[key]
+            if mask[0] != '': mask[0] = [mask[0]]
+            yield from [i for i in mask[:2] if i != '']
+            yield from Gen_mask(mask[2])
+            break
+        elif not any(i in mask for i in table) and mask != '':
+            yield [mask]
+            break
+        i+=1
 
 
-def Output(Password, Pre, Suf):  # func for wrapping outputs
+def Output(Password, Pre='', Suf=''):  # func for wrapping outputs
     global n
     if not WriteToFile:  # just printing
         for item in Password:
@@ -143,7 +147,8 @@ def main():
         for char in mask:
             if char in len_key:
                 all_pos *= len_key[char]
-        Output(Gen_mask(mask), Pre, Suf)
+        processed_mask = Gen_mask(mask)
+        Output(p(*processed_mask))
     elif maxlength == minlength:  # generating combinations with same length
         all_pos = len(mystring) ** minlength  # calculatinf all possible combs
         Output(Generator(mystring, Length=minlength, algo=algo), Pre, Suf)
@@ -165,9 +170,9 @@ if __name__ == '__main__':
     except (NameError, IndexError, ValueError):
         print("Incorrect Arguments use -h or --help for help.")
     except KeyboardInterrupt:
-        print("Stoped")
+        print("\nStoped")
     except MemoryError:
         print("Memory is Full, Use Memory Friendly Mode")
     finally:
         end = time.time()
-        print('\n', 'Ended in: ', round(end-start, 10), 'sec')
+        print(f'\n Ended in: {round(end-start, 10)} sec')
