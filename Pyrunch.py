@@ -15,7 +15,7 @@ Options:
    --hash     Hash Passwords With Given Algorithm:
                 md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s,
                 sha3_224, sha3_256, sha3_384, sha3_512.
-   --combo    write plain and hashed text with given seperator(only works when --hash is used).
+   --combo    write plain and hashed text with given separator(only works when --hash is used).
    --mask     Insted of Max and Min Length You Can Use Mask:
                 ?l: Alphabet_lower
                 ?u: Alphabet_upper
@@ -42,7 +42,7 @@ Pre = ''
 Suf = ''
 mask = None
 combo = False
-seperator = None
+separator = None
 
 
 def Generator(*mystring, Length=1, algo=None):  # func for generating combinations
@@ -76,7 +76,7 @@ def Gen_mask(mask):  # func for generating mask passwords
 def Output(Password, Pre='', Suf=''):  # func for wrapping outputs
     global n
     if combo:
-        Password = (i[0]+seperator+i[1] for i in Password)
+        Password = (i[0]+separator+i[1] for i in Password)
     elif algo is not None:
         Password = (i[1] for i in Password)
     else:
@@ -147,7 +147,7 @@ def parse(args):
             elif args[arg] == '--combo':
                 combo = True
                 if args[arg+1] != '':
-                    seperator = args[arg+1]
+                    separator = args[arg+1]
             arg += 1
 
 
