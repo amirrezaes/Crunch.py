@@ -111,7 +111,7 @@ def Output(Password, Pre='', Suf=''):  # func for wrapping outputs
 
 def parse(args):
     global WriteToFile, Filename, MemoryFriendly, algo, Pre, Suf, ha
-    global mystring, minlength, maxlength, mask, seperator, combo
+    global mystring, minlength, maxlength, mask, separator, combo
     if '-h' in args or '--help' in args or '-h' in sys.argv[1:2]:
         print(intro)
         sys.exit(0)
