@@ -15,6 +15,7 @@ Options:
    --hash     Hash Passwords With Given Algorithm:
                 md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s,
                 sha3_224, sha3_256, sha3_384, sha3_512.
+   --combo    write plain and hashed text with given seperator(only works when --hash is used).
    --mask     Insted of Max and Min Length You Can Use Mask:
                 ?l: Alphabet_lower
                 ?u: Alphabet_upper
@@ -40,6 +41,8 @@ algo = None
 Pre = ''
 Suf = ''
 mask = None
+combo = False
+seperator = ':'
 
 
 def Generator(*mystring, Length=1, algo=None):  # func for generating combinations
@@ -48,7 +51,7 @@ def Generator(*mystring, Length=1, algo=None):  # func for generating combinatio
     for iter in recurser:
         result = (i+[j] for i in result for j in iter)
     if algo is not None:
-        hashed = (ha.new(algo, data=''.join(i).encode()).hexdigest() for i in result)
+        hashed = ((''.join(i), ha.new(algo, data=''.join(i).encode()).hexdigest()) for i in result)
         yield from hashed
     yield from result
 
@@ -72,21 +75,28 @@ def Gen_mask(mask):  # func for generating mask passwords
 
 def Output(Password, Pre='', Suf=''):  # func for wrapping outputs
     global n
+    if combo:
+        Password = (i[0]+seperator+i[1] for i in Password)
+    elif algo is not None:
+        Password = (i[1] for i in Password)
+    else:
+        Password = (''.join(i) for i in Password)
+
     if not WriteToFile:  # just printing
         for item in Password:
-            print(Pre, *item, Suf, sep='')
+            print(f'{Pre}{item}{Suf}')
     elif WriteToFile:  # writing to file
         with open(Filename, 'a') as out:
             if MemoryFriendly:  # this will not store anything in memory
                 for item in Password:
-                    out.write(Pre+''.join(item)+Suf+'\n')
+                    out.write(Pre+item+Suf+'\n')
                     n+=1
                     if n % round(all_pos/100) == 0:
                         print('Working: ', round((n*100)/all_pos), '%', end='\r')
                 return
             chunk = []  # we will store 1% of combs every time before writing
             for item in Password:
-                chunk.append(Pre+''.join(item)+Suf+'\n')
+                chunk.append(Pre+item+Suf+'\n')
                 n += 1
                 try:
                     if n % round(all_pos/100) == 0:
@@ -101,7 +111,7 @@ def Output(Password, Pre='', Suf=''):  # func for wrapping outputs
 
 def parse(args):
     global WriteToFile, Filename, MemoryFriendly, algo, Pre, Suf, ha
-    global mystring, minlength, maxlength, mask
+    global mystring, minlength, maxlength, mask, seperator, combo
     if '-h' in args or '--help' in args or '-h' in sys.argv[1:2]:
         print(intro)
         sys.exit(0)
@@ -134,6 +144,10 @@ def parse(args):
                 import hashlib as ha
                 algo = args[arg+1]
                 arg += 1
+            elif args[arg] == '--combo':
+                combo = True
+                if args[arg+1] != '':
+                    seperator = args[arg+1]
             arg += 1
 
 
