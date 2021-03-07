@@ -42,7 +42,7 @@ Pre = ''
 Suf = ''
 mask = None
 combo = False
-separator = None
+separator = ''
 
 
 def Generator(*mystring, Length=1, algo=None):  # func for generating combinations
