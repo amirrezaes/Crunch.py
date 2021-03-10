@@ -21,6 +21,8 @@ I will add multiprocessing in future.
                     ?u: Alphabet_upper
                     ?s: Special_chars
                     ?d: Digits
-       -h         Print This Help Message
+       --start    Start from given position
+       --b        Specifie the size of the output file, bytes(no unit), kb, mb, gb.
+       -h, --help  Print This Help Message
 
 ![](gif.gif)
