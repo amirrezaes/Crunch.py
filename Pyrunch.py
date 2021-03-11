@@ -23,6 +23,7 @@ Options:
                 ?s: Special_chars
                 ?d: Digits
    --start    Start from given position
+   --end      ِDetermine if script should stop early in given word
    --b        Specifie the size of the output file, bytes(no unit), kb, mb, gb.
    -h, --help  Print This Help Message
 
