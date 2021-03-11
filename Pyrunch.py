@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import string
-from itertools import dropwhile
+from itertools import takewhile, dropwhile
 
 intro = '''
 Usage: pyrunch.py <min> <max> <characters> <options>
@@ -40,7 +40,7 @@ SIZE_TABLE = {'kb': 1000,
               range(6, 9): 'mb',
               range(9, 12): 'gb'}
 
-start = time.time()
+start_time = time.time()
 
 n = 0  # we are using n to track the number of generated combinations
 workingpath = os.getcwd()
@@ -56,7 +56,8 @@ current_size = 0
 algo = None
 Pre = ''
 Suf = ''
-Start = None
+start = None
+end = None
 mask = None
 combo = False
 separator = ''
@@ -73,19 +74,40 @@ def unit_convert(byte, to_byte=False, from_byte=False):
                 return f'{byte}{SIZE_TABLE[unit]}'
 
 
-def Generator(*mystring, Length=1, Start=None, chunk=None, Pre='', Suf=''):  # func for generating combinations
+def Resume(pools, start=None, end=None, Pre='', Suf=''):  # works but like a turtle, make it better and use it and let me know
+    # this function start right from where we determined but as I mentioned it is slow
+    result = [[]]
+    if start:
+        temp_pools = [[start[0]]]
+        for s in range(1, len(start)):
+            temp_pools.append(pools[s][pools[s].index(start[s]):])
+    for pool in temp_pools:
+        result = [x+[y] for x in result for y in pool]
+    for item in result:
+        yield f"{Pre}{''.join(item)}{Suf}\n"
+        if ''.join(item) == end:
+            break
+
+
+def Generator(*mystring, Length=1, start=None, end=None, chunk=None, Pre='', Suf=''):  # func for generating combinations
     global current_length
     current_length = Length
+    pools = [tuple(pool) for pool in mystring] * Length
+    if start:
+        pools[0] = pools[0][pools[0].index(start[0]):]  # start generating from character start[0]
     result = [[]]
-    recurser = [tuple(iter) for iter in mystring] * Length
     if mask is not None:
-        for iter in recurser:
-            result = [i+[j] for i in result for j in iter]
+        for pool in pools:
+            result = [i+[j] for i in result for j in pool]
     else:
-        for iter in recurser:
-            result = (i+[j] for i in result for j in iter)
-    if Start is not None and len(Start) == Length:
-        result = dropwhile(lambda x: ''.join(x) != Start, result)
+        for pool in pools:
+            result = (i+[j] for i in result for j in pool)
+
+    if start is not None and len(start) == Length:
+        result = dropwhile(lambda x: ''.join(x) != start, result)
+        # result = Resume(pools, start)
+    if end is not None and len(end) == Length:
+        result = takewhile(lambda x: ''.join(x) != end, result)
 
     if not MemoryFriendly:  # we will store 1% of combs every time before writing
         c = []
@@ -145,7 +167,7 @@ def Output(Password, algo=None):  # func for wrapping outputs
     if algo is not None:
         Password = ((item.strip('\n'),
                      ha.new(algo, data=item.strip('\n').encode()).hexdigest())
-                     for item in Password)
+                    for item in Password)
         if combo:
             Password = (f'{i[0]}{separator}{i[1]}\n' for i in Password)
         else:
@@ -162,14 +184,14 @@ def Output(Password, algo=None):  # func for wrapping outputs
             with open(Filename, 'a') as out:
                 for item in Password:
                     out.writelines(item)
-                    n += MemoryFriendly or (n < all_pos and Chunk)  # if MemoryFriendly is off then we should increment by chunk length
+                    n += MemoryFriendly or Chunk  # if MemoryFriendly is off then we should increment by chunk length
                     if n % (round(all_pos/100) or 1) == 0:
                         print('Working: ', round((n*100)/all_pos), '%', end='\r')
 
 
 def parse(args):
     global WriteToFile, Filename, MemoryFriendly, algo, Pre, Suf, ha, Split_File
-    global mystring, minlength, maxlength, mask, separator, combo, Start, split_bytes
+    global mystring, minlength, maxlength, mask, separator, combo, start, end, split_bytes
     if '--help' in sys.argv or '-h' in sys.argv:
         print(intro)
         sys.exit(0)
@@ -210,12 +232,19 @@ def parse(args):
                     separator = args[arg+1]
                 arg += 1
             elif args[arg] == '--start':
-                if all(i in mystring for i in args[arg+1]):
-                    Start = args[arg+1]
-                    minlength = len(Start)
+                if all(i in mystring for i in args[arg+1]) and minlength <= len(args[arg+1]) <= maxlength:
+                    start = args[arg+1]
+                    minlength = len(start)
                     arg+=1
                     continue
                 print('Wrong place to start, generating from the beggening...')
+            elif args[arg] == '--end':
+                if all(i in mystring for i in args[arg+1]) and minlength <= len(args[arg+1]) <= maxlength:
+                    end = args[arg+1]
+                    maxlength = len(end)
+                    arg+=1
+                    continue
+                print('Wrong place to end, generating from the beggening...')
             elif args[arg] == '-b':
                 MemoryFriendly = True  # Trust me we need this
                 split_bytes = args[arg+1].lower()
@@ -230,9 +259,9 @@ def parse(args):
 
 
 def main():
-    global start, all_pos, Chunk, writing_lenght
+    global start_time, all_pos, Chunk, writing_lenght
 
-    start = time.time()
+    start_time = time.time()
     if mask is not None:
         len_key = {'@': 26, ',': 26, '%': 10, '$': 36}
         all_pos = 1
@@ -241,12 +270,12 @@ def main():
                 all_pos *= len_key[char]
         Chunk = all_pos // 100 or all_pos
         processed_mask = Gen_mask(mask)
-        Output(Generator(*processed_mask, Start=Start, chunk=Chunk, Pre=Pre, Suf=Suf), algo)
+        Output(Generator(*processed_mask, start=start, end=end, chunk=Chunk, Pre=Pre, Suf=Suf), algo)
     elif maxlength == minlength:  # generating combinations with same length
         all_pos = len(mystring) ** minlength  # calculatinf all possible combs
         writing_lenght = minlength
         Chunk = all_pos // 100 or all_pos
-        Output(Generator(mystring, Length=minlength, Start=Start, chunk=Chunk, Pre=Pre, Suf=Suf), algo)
+        Output(Generator(mystring, Length=minlength, start=start, end=end, chunk=Chunk, Pre=Pre, Suf=Suf), algo)
     else:  # generating combinations with diffrent lengths
         if minlength > maxlength:
             print('Min Length Is Bigger Than Max!! Try Again.')
@@ -257,7 +286,7 @@ def main():
         Chunk = all_pos // 100 or all_pos
         for length in range(minlength, maxlength+1):
             writing_lenght = length
-            Output(Generator(mystring, Length=length, Start=Start, chunk=Chunk, Pre=Pre, Suf=Suf), algo)
+            Output(Generator(mystring, Length=length, start=start, end=end, chunk=Chunk, Pre=Pre, Suf=Suf), algo)
 
 
 try:
@@ -270,5 +299,5 @@ except KeyboardInterrupt:
 except MemoryError:
     print("Memory is Full, Use Memory Friendly Mode")
 finally:
-    end = time.time()
-    print(f'\n Ended in: {round(end-start, 10)} sec')
+    end_time = time.time()
+    print(f'\n Ended in: {round(end_time-start_time, 10)} sec')
