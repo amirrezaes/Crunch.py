@@ -26,7 +26,7 @@ Options:
    --start    Start from given position
    --end      ِDetermine if script should stop early in given word
    -b         Specifie the size of the output file, (no unit)=bytes, kb, mb, gb
-   -z         compres the output with lzma
+   -z         compress the output with lzma
    -h, --help  Print This Help Message
 
 '''
