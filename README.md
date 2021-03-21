@@ -2,7 +2,7 @@
 Python script for crunch
 
 It is not as fast as the orginal crunch which is written in C but it is definitely fast among other worldlist generators.
-I will add multiprocessing in future.
+I'm not using the itertools.product, just to keep things pure.
 
     Usage: pyrunch.py <min> <max> <characters> <options>
            or
