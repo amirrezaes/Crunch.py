@@ -1,7 +1,8 @@
 import os
+import lzma
+import string
 import sys
 import time
-import string
 from itertools import takewhile, dropwhile
 
 intro = '''
@@ -15,7 +16,7 @@ Options:
    -p prefix  Add a Prefix to Passwords
    --hash     Hash Passwords With Given Algorithm:
                 md5, sha1, sha224, sha256, sha384, sha512, blake2b, blake2s,
-                sha3_224, sha3_256, sha3_384, sha3_512.
+                sha3_224, sha3_256, sha3_384, sha3_512
    --combo    write plain and hashed text with given separator(only works when --hash is used).
    --mask     Insted of Max and Min Length You Can Use Mask:
                 ?l: Alphabet_lower
@@ -24,7 +25,8 @@ Options:
                 ?d: Digits
    --start    Start from given position
    --end      ِDetermine if script should stop early in given word
-   --b        Specifie the size of the output file, bytes(no unit), kb, mb, gb.
+   -b         Specifie the size of the output file, (no unit)=bytes, kb, mb, gb
+   -z         compres the output with lzma
    -h, --help  Print This Help Message
 
 '''
@@ -55,6 +57,7 @@ Part_num = 1  # variable for file name in splited files
 current_length = 0
 current_size = 0
 algo = None
+compression = False
 Pre = ''
 Suf = ''
 start = None
@@ -173,25 +176,29 @@ def Output(Password, algo=None):  # func for wrapping outputs
             Password = (f'{i[0]}{separator}{i[1]}\n' for i in Password)
         else:
             Password = (i[1]+'\n' for i in Password)
-    if not WriteToFile:  # just printing
+    if not WriteToFile:
         for item in Password:
             print(*item, sep='', end='')
-    elif WriteToFile:  # writing to file
+    elif WriteToFile:
         if Split_File:
             print('Writing length: ', writing_lenght)
             Split(Password, Filename, split_bytes)
             return
+        # else:
+        if compression:
+            file_obj = lzma.open(Filename+'.xz', 'at', filters=[{'id': lzma.FILTER_LZMA2, "mode": lzma.MODE_FAST}])
         else:
-            with open(Filename, 'a') as out:
-                for item in Password:
-                    out.writelines(item)
-                    n += MemoryFriendly or Chunk  # if MemoryFriendly is off then we should increment by chunk length
-                    if n % (round(all_pos/100) or 1) == 0:
-                        print('Working: ', round((n*100)/all_pos), '%', end='\r')
+            file_obj = open(Filename, 'a')
+        with file_obj as out:
+            for item in Password:
+                out.writelines(item)
+                n += MemoryFriendly or Chunk  # if MemoryFriendly is off then we should increment by chunk length
+                if n % (round(all_pos/100) or 1) == 0:
+                    print('Working: ', round((n*100)/all_pos), '%', end='\r')
 
 
 def parse(args):
-    global WriteToFile, Filename, MemoryFriendly, algo, Pre, Suf, ha, Split_File
+    global WriteToFile, Filename, MemoryFriendly, algo, Pre, Suf, ha, Split_File, compression
     global mystring, minlength, maxlength, mask, separator, combo, start, end, split_bytes
     if '--help' in sys.argv or '-h' in sys.argv:
         print(intro)
@@ -224,7 +231,7 @@ def parse(args):
                 arg += 1
             elif args[arg] == '--hash':
                 import hashlib as ha  # what the hell !? it is a heavy library , import it when you need it
-                MemoryFriendly = True  # hashs are too long, saving them in memory is not a good idea
+                MemoryFriendly = True  # hashes are too long, saving them in memory is not a good idea
                 algo = args[arg+1]
                 arg += 1
             elif args[arg] == '--combo':
@@ -255,6 +262,9 @@ def parse(args):
                     split_bytes = unit_convert(split_bytes, to_byte=True)
                 Split_File = split_bytes and True or False  # 0 bytes means no spliting :\
                 arg += 1
+            elif args[arg] == '-z':
+                compression = True
+                Split_File = False  # not a good idea with lzma
 
             arg += 1
 
